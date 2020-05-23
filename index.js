@@ -19,7 +19,7 @@ app.get('/', (request,response) => {
 app.get('/data', db.getData);
 app.get('/add/:timestamp/:id/:volume', db.addEntry);
 app.get('/data/:id', db.getDeviceData);
-//app.get('/summary/:id', db.getDeviceLastWeek);
+app.get('/summary/:id', db.sumVolume);
 app.get('/dailysum/:id', db.getDailySum);
 // app.get('/data', db.getData);
 // app.post('/users', db.createUser)
