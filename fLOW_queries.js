@@ -50,8 +50,40 @@ const getDeviceData = (request, response) => {
     )
 }
 
+
+const getLastTimestamp = (id) => {
+    pool.query()
+};
+const getDailySum = (request, response) => {
+    const id = parseInt(request.params.id);
+    // const day = new Date();
+    //response.status(200).send(`Today: ${day}`);
+    var sum = sumVolume(id, 200, 201);
+    // console.log(sum);
+    response.status(200).json(sum);
+};
+// Sum up the 
+const sumVolume = (id, start_timestamp, end_timestamp) => {
+    //const id = parseInt(request.params.id);
+
+    // const start_timestamp = 200;
+    // const end_timestamp = 201;
+    pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp],
+    (error, results) =>
+        {
+            if (error) {
+                throw error;
+            }
+            var vol_sum = 0
+            // response.status(200).json(results.rows);
+            return results.rows
+        }
+    )
+}
+
 module.exports = {
     getData,
     addEntry,
     getDeviceData,
+    getDailySum,
 }
