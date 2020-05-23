@@ -68,7 +68,7 @@ const sumVolume = (id, start_timestamp, end_timestamp) => {
 
     // const start_timestamp = 200;
     // const end_timestamp = 201;
-    pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp],
+    var rows = pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp],
     (error, results) =>
         {
             if (error) {
@@ -78,7 +78,8 @@ const sumVolume = (id, start_timestamp, end_timestamp) => {
             // response.status(200).json(results.rows);
             return results.rows
         }
-    )
+    );
+    return rows;
 }
 
 module.exports = {
