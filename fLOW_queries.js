@@ -63,11 +63,12 @@ const getDailySum = (request, response) => {
     response.status(200).json(sum);
 };
 // Sum up the 
-const sumVolume = (id, start_timestamp, end_timestamp) => {
-    //const id = parseInt(request.params.id);
+// const sumVolume = (id, start_timestamp, end_timestamp) => {
+const sumVolume = (request, response) => {
+    const id = parseInt(request.params.id);
 
-    // const start_timestamp = 200;
-    // const end_timestamp = 201;
+    const start_timestamp = 200;
+    const end_timestamp = 201;
     var rows = pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp],
     (error, results) =>
         {
@@ -75,11 +76,11 @@ const sumVolume = (id, start_timestamp, end_timestamp) => {
                 throw error;
             }
             var vol_sum = 0
-            // response.status(200).json(results.rows);
-            return results.rows
+            response.status(200).send(results.rows);
+            // return results.rows
         }
     );
-    return rows;
+    // return rows;
 }
 
 module.exports = {
@@ -87,4 +88,5 @@ module.exports = {
     addEntry,
     getDeviceData,
     getDailySum,
+    sumVolume,
 }
