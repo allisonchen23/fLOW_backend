@@ -1,5 +1,5 @@
 const Pool = require('pg').Pool;
-const url = require('url');
+//const url = require('url');
 const pool = new Pool ({
     user: 'allison_chen',
     password: 'postgres_sql_fLOW',
@@ -16,6 +16,7 @@ const getData = (request, response) => {
         }
         response.status(200).json(results.rows);
     });
+    console.log("Data here ");
 }
 
 // Add Data
@@ -74,26 +75,26 @@ const getDailySum = async (request, response) => {
     // console.log(sum);
     //response.status(200).json(sum);
 };
-// Sum up the 
-// const sumVolume = (id, start_timestamp, end_timestamp) => {
-const sumVolume = (request, response) => {
-    const id = parseInt(request.params.id);
 
+/*
+    Helper function to sum data between start_timestamp and
+    end_timestamp with ID id
+    Arguments: 
+*/
+const sumRange = async (start_timestamp, end_timestamp, id) => {
+    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp]);
+    return query_result.rows[0].sum;
+};
+
+const sumVolume = (async (request, response) => {
+    const id = parseInt(request.params.id);
     const start_timestamp = 200;
     const end_timestamp = 201;
-    var rows = pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp],
-    (error, results) =>
-        {
-            if (error) {
-                throw error;
-            }
-            var vol_sum = 0
-            response.status(200).send(results.rows);
-            // return results.rows
-        }
-    );
-    // return rows;
-}
+    await sumRange(start_timestamp, end_timestamp, id).then((result) => {
+        response.status(200).send('' + result);
+    });
+    response.end();
+});
 
 module.exports = {
     getData,
