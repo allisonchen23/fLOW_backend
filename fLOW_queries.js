@@ -64,36 +64,20 @@ const getDailySum = (request, response) => {
     response.status(200).json(sum);
 };
 // Sum up the 
-// const sumVolume = (id, start_timestamp, end_timestamp) => {
-const sumVolume = (request, response) => {
+const sumRange = async (start_timestamp, end_timestamp, id) => {
+    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp]);
+    return query_result.rows[0].sum;
+};
+
+const sumVolume = (async (request, response) => {
     const id = parseInt(request.params.id);
     const start_timestamp = 200;
     const end_timestamp = 201;
-    const rows = pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp],
-    (error, results) =>
-        {
-            if (error) {
-                throw error;
-            }
-            var vol_sum = 0
-            // response.status(200);//.send(results.rows);
-            // response.write(JSON.stringify(results.rows));
-            // response.write("\nHI");
-            // response.end();
-            // return results.rows;
-            // return results.rows
-        }
-    );
-    response.status(200);
-    response.write("HI");
-    // console.log("HI");
-    // response.write(JSON.stringify(rows));
+    await sumRange(start_timestamp, end_timestamp, id).then((result) => {
+        response.status(200).send('' + result);
+    });
     response.end();
-    // response.status(200);
-    // response.write(JSON.stringify(rows));
-    // response.end();
-    // return rows;
-}
+});
 
 const sumVolumeVar1 = (request, response) => {
     const id = parseInt(request.params.id);
