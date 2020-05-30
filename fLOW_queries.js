@@ -62,9 +62,32 @@ const getDailySum = async (request, response) => {
     console.log("start");
     let id = parseInt(request.params.id);
     let latestTime = await getLastTimestamp(id);
+    let latestMiliTime = latestTime*1000;
+    let latestDate = new Date(latestMiliTime);
 
-    console.log(latestTime);
-    console.log("run second");
+    let prevWeekStartingDate = latestDate;
+    prevWeekStartingDate.setDate(latestDate.getDate()-6);
+    prevWeekStartingDate.setHours(0);
+    prevWeekStartingDate.setMinutes(0);
+    prevWeekStartingDate.setSeconds(0);
+    prevWeekStartingDate.setMilliseconds(0);
+    
+    let start, end, startDate, endDate;
+    let results = [];
+    for(let i = 0; i < 7; ++i) {
+        startDate = prevWeekStartingDate;
+        startDate.setDate(startDate + i);
+        endDate = startDate;
+        endDate.setDate(startDate.getDate()+1);
+        //getTime() return in ms
+        start = startDate.getTime()/1000; 
+        end = endDate.getTime()/1000;
+
+        let sum = await sumRange(start, end, id);
+        results.push(sum);
+    }
+
+    console.log(results);
 
     
     response.end();
