@@ -63,7 +63,12 @@ const getDailySum = (request, response) => {
     // console.log(sum);
     response.status(200).json(sum);
 };
-// Sum up the 
+
+/*
+    Helper function to sum data between start_timestamp and
+    end_timestamp with ID id
+    Arguments: 
+*/
 const sumRange = async (start_timestamp, end_timestamp, id) => {
     const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp]);
     return query_result.rows[0].sum;
