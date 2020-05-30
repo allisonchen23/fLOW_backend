@@ -50,17 +50,29 @@ const getDeviceData = (request, response) => {
     )
 }
 
-
-const getLastTimestamp = (id) => {
-    pool.query()
+/* Unable to work due to async runtime? */
+const getLastTimestamp = async (id) => {
+    const max = await pool.query('SELECT MAX("timestamp") FROM data WHERE device_id=($1)', [id]);
+    return max.rows[0].max;
 };
-const getDailySum = (request, response) => {
-    const id = parseInt(request.params.id);
+
+const getDailySum = async (request, response) => {
+    /* Ray: get timestamps from last seven days */
+    console.log("start");
+    let id = parseInt(request.params.id);
+    let latestTime = await getLastTimestamp(id);
+
+    console.log(latestTime);
+    console.log("run second");
+
+    
+    response.end();
+
     // const day = new Date();
     //response.status(200).send(`Today: ${day}`);
-    var sum = sumVolume(id, 200, 201);
+    //var sum = sumVolume(id, 200, 201);
     // console.log(sum);
-    response.status(200).json(sum);
+    //response.status(200).json(sum);
 };
 // Sum up the 
 // const sumVolume = (id, start_timestamp, end_timestamp) => {
