@@ -16,7 +16,7 @@ const getData = (request, response) => {
         }
         response.status(200).json(results.rows);
     });
-    console.log("Data here ");
+    console.log("Data ");
 }
 
 // Add Data
