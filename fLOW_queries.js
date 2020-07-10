@@ -65,10 +65,39 @@ const getDailySum = async (request, response) => {
 
     console.log(latestTime);
     console.log("run second");
+    let lastDay = new Date(latestTime*1000 + 3000);
+    // lastDay.setTime(latestTime);
+    console.log("last month: " + lastDay.getMonth() + " day: " + lastDay.getDate() + " year: " + lastDay.getFullYear());
+    console.log(lastDay.getSeconds());
+    
+    let curDay = new Date(lastDay);
+    curDay.setDate(curDay.getDate() - 6);
+    curDay.setHours(0);
+    curDay.setMinutes(0);
+    curDay.setSeconds(0);
+    console.log("cur month: " + curDay.getMonth() + " day: " + curDay.getDate() + " year: " + curDay.getFullYear());
 
+    // console.log(curDay.getDate()  + " lastDay's date: " + lastDay.getDate());
+    console.log(curDay.getHours() + " " + curDay.getMinutes() + " " + curDay.getSeconds());
+    // curDay.setDate(latestTime.)
     
     response.end();
+    var weekSum = {};
+    var curTS = curDay.getTime()/1000;
+    var nextDay = new Date(curDay);
+    nextDay.setDate(nextDay.getDate() + 1);
 
+    console.log(curTS + "nextDay's Date: " + nextDay.getDate());
+    for (var i = 0; i<7; i++) {
+        console.log("start: " + (curDay.getTime()/1000));
+        console.log("end: " + (nextDay.getTime()/1000));
+        weekSum[curTS] = await sumRange(curTS, nextDay.getTime()/1000, id)
+        console.log(weekSum[curTS]);
+        curDay.setDate(curDay.getDate() + 1);
+        curTS = curDay.getTime()/1000;
+        nextDay.setDate(nextDay.getDate() + 1);
+    }
+    console.log(weekSum);
     // const day = new Date();
     //response.status(200).send(`Today: ${day}`);
     //var sum = sumVolume(id, 200, 201);
@@ -82,8 +111,14 @@ const getDailySum = async (request, response) => {
     Arguments: 
 */
 const sumRange = async (start_timestamp, end_timestamp, id) => {
-    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp]);
-    return query_result.rows[0].sum;
+    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<($3)', [id, start_timestamp, end_timestamp]);
+    let sum = query_result.rows[0].sum;
+    if (sum != null) {
+        return sum;
+    }
+    else {
+        return 0;
+    }
 };
 
 const sumVolume = (async (request, response) => {

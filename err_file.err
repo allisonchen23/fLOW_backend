@@ -1,0 +1,10 @@
+node[8176]: ../src/node.cc:637:void node::ResetStdio(): Assertion `(0) == (err)' failed.
+ 1: 0xa02f90 node::Abort() [node]
+ 2: 0xa0300e  [node]
+ 3: 0x9d0857 node::ResetStdio() [node]
+ 4: 0x7fafbce74ce9  [/lib64/libc.so.6]
+ 5: 0x7fafbce74d37  [/lib64/libc.so.6]
+ 6: 0x9a7277  [node]
+ 7: 0xbe2f89  [node]
+ 8: 0xbe4d77 v8::internal::Builtin_HandleApiCall(int, unsigned long*, v8::internal::Isolate*) [node]
+ 9: 0x13c04d9  [node]

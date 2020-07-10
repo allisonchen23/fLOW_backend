@@ -18,3 +18,4 @@ Sometimes it's nice to save the console.log in a file or just have the server ru
     * `>~/log_file.log 2>err_file.err` means redirect the console.log to a file in the root directory called log_file.log and redirect standard error to a file in the root directory called err_file.err
     * The `&` means run this process in the background
 4. If you would still like to see the console.log in real time, run `tail -f -n +1 ~/log_file.log`
+5. Do **NOT** close the terminal window, instead use `exit` to logout of the VM. Closing the window will still terminate the process.
