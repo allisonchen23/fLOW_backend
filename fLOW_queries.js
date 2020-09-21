@@ -81,7 +81,7 @@ const getDailySum = async (request, response) => {
     console.log(curDay.getHours() + " " + curDay.getMinutes() + " " + curDay.getSeconds());
     // curDay.setDate(latestTime.)
     
-    response.end();
+    
     var weekSum = {};
     var curTS = curDay.getTime()/1000;
     var nextDay = new Date(curDay);
@@ -98,11 +98,9 @@ const getDailySum = async (request, response) => {
         nextDay.setDate(nextDay.getDate() + 1);
     }
     console.log(weekSum);
-    // const day = new Date();
-    //response.status(200).send(`Today: ${day}`);
-    //var sum = sumVolume(id, 200, 201);
-    // console.log(sum);
-    //response.status(200).json(sum);
+    response.status(200).json(weekSum);
+    response.end();
+
 };
 
 /*
@@ -121,13 +119,15 @@ const sumRange = async (start_timestamp, end_timestamp, id) => {
     }
 };
 
+/**
+ * Sum volume over all dates for a specific device
+ * @param {} request 
+ * @param {*} response 
+ */
 const sumVolume = (async (request, response) => {
     const id = parseInt(request.params.id);
-    const start_timestamp = 200;
-    const end_timestamp = 201;
-    await sumRange(start_timestamp, end_timestamp, id).then((result) => {
-        response.status(200).send('' + result);
-    });
+    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1)', [id]);
+    response.status(200).send(query_result.rows[0])
     response.end();
 });
 
