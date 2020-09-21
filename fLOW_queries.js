@@ -60,8 +60,16 @@ const getLastTimestamp = async (id) => {
 const getDailySum = async (request, response) => {
     /* Ray: get timestamps from last seven days */
     console.log("start");
-    let id = parseInt(request.params.id);
-    let latestTime = await getLastTimestamp(id);
+    let ids = request.params.id.split("_");
+    let latestTime = 0;
+    
+    // Out of all the devices we want to look at, obtain the latest timestamp
+    for (let id of ids) {
+        let time = await getLastTimestamp(id);
+        if (time > latestTime) {
+            latestTime = time;
+        }
+    }
 
     console.log(latestTime);
     console.log("run second");
@@ -81,22 +89,44 @@ const getDailySum = async (request, response) => {
     console.log(curDay.getHours() + " " + curDay.getMinutes() + " " + curDay.getSeconds());
     // curDay.setDate(latestTime.)
     
-    
+    // TODO: Remove nextDay
     var weekSum = {};
     var curTS = curDay.getTime()/1000;
+    let startTS = curTS;
     var nextDay = new Date(curDay);
     nextDay.setDate(nextDay.getDate() + 1);
 
     console.log(curTS + "nextDay's Date: " + nextDay.getDate());
-    for (var i = 0; i<7; i++) {
-        console.log("start: " + (curDay.getTime()/1000));
-        console.log("end: " + (nextDay.getTime()/1000));
-        weekSum[curTS] = await sumRange(curTS, nextDay.getTime()/1000, id)
-        console.log(weekSum[curTS]);
+    for (let i = 0; i < 8; i++) {
+        weekSum[curTS] = 0;
         curDay.setDate(curDay.getDate() + 1);
         curTS = curDay.getTime()/1000;
         nextDay.setDate(nextDay.getDate() + 1);
     }
+
+    for (let id of ids) {
+        console.log(id);
+        for (let idx in Object.keys(weekSum)) {
+            if (idx == 7) {
+                break;
+            }
+            let timestamp = Object.keys(weekSum)[idx];
+            let tomorrow_timestamp = Object.keys(weekSum)[parseInt(idx)+1];
+            console.log(`idx: ${idx} today: ${timestamp} tomorrow: ${tomorrow_timestamp}`);
+            weekSum[timestamp] += await sumRange(timestamp, tomorrow_timestamp, id)
+        }
+    }
+    
+    delete weekSum[Object.keys(weekSum)[7]];
+    // for (var i = 0; i<7; i++) {
+    //     console.log("start: " + (curDay.getTime()/1000));
+    //     console.log("end: " + (nextDay.getTime()/1000));
+    //     weekSum[curTS] = await sumRange(curTS, nextDay.getTime()/1000, id)
+    //     console.log(weekSum[curTS]);
+    //     curDay.setDate(curDay.getDate() + 1);
+    //     curTS = curDay.getTime()/1000;
+    //     nextDay.setDate(nextDay.getDate() + 1);
+    // }
     console.log(weekSum);
     response.status(200).json(weekSum);
     response.end();
@@ -131,10 +161,22 @@ const sumVolume = (async (request, response) => {
     response.end();
 });
 
+const getUserIds = (async (request, response) => {
+    let query_result = await pool.query('SELECT DISTINCT device_id FROM data;');
+    console.log(query_result);
+    let user_ids = [];
+    for (let entry of query_result.rows) {
+        user_ids.push(entry["device_id"]);
+    }
+    console.log(user_ids);
+    response.status(200).send(user_ids);
+    response.end();
+})
 module.exports = {
     getData,
     addEntry,
     getDeviceData,
     getDailySum,
     sumVolume,
+    getUserIds
 }
