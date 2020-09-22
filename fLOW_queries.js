@@ -58,11 +58,9 @@ const getLastTimestamp = async (id) => {
 };
 
 const getDailySum = async (request, response) => {
-    /* Ray: get timestamps from last seven days */
-    console.log("start");
     let ids = request.params.id.split("_");
     let latestTime = 0;
-    
+
     // Out of all the devices we want to look at, obtain the latest timestamp
     for (let id of ids) {
         let time = await getLastTimestamp(id);
@@ -71,66 +69,51 @@ const getDailySum = async (request, response) => {
         }
     }
 
-    console.log(latestTime);
-    console.log("run second");
     let lastDay = new Date(latestTime*1000 + 3000);
-    // lastDay.setTime(latestTime);
-    console.log("last month: " + lastDay.getMonth() + " day: " + lastDay.getDate() + " year: " + lastDay.getFullYear());
-    console.log(lastDay.getSeconds());
+    // console.log("last month: " + lastDay.getMonth() + " day: " + lastDay.getDate() + " year: " + lastDay.getFullYear());
+    // console.log(lastDay.getSeconds());
     
+    //Set curDay to the start date
     let curDay = new Date(lastDay);
     curDay.setDate(curDay.getDate() - 6);
     curDay.setHours(0);
     curDay.setMinutes(0);
     curDay.setSeconds(0);
-    console.log("cur month: " + curDay.getMonth() + " day: " + curDay.getDate() + " year: " + curDay.getFullYear());
+    // console.log("cur month: " + curDay.getMonth() + " day: " + curDay.getDate() + " year: " + curDay.getFullYear());
 
     // console.log(curDay.getDate()  + " lastDay's date: " + lastDay.getDate());
-    console.log(curDay.getHours() + " " + curDay.getMinutes() + " " + curDay.getSeconds());
+    // console.log(curDay.getHours() + " " + curDay.getMinutes() + " " + curDay.getSeconds());
     // curDay.setDate(latestTime.)
     
-    // TODO: Remove nextDay
     var weekSum = {};
     var curTS = curDay.getTime()/1000;
-    let startTS = curTS;
-    var nextDay = new Date(curDay);
-    nextDay.setDate(nextDay.getDate() + 1);
 
-    console.log(curTS + "nextDay's Date: " + nextDay.getDate());
+    // Initialize each day's sum to be 0
+    // We keep 8 elements for 7 day calculations so we have the ending timestamp on hand for the last day
     for (let i = 0; i < 8; i++) {
         weekSum[curTS] = 0;
         curDay.setDate(curDay.getDate() + 1);
         curTS = curDay.getTime()/1000;
-        nextDay.setDate(nextDay.getDate() + 1);
     }
 
+    // Get the daily sums for each day of the week for each device 
+    let keys = Object.keys(weekSum)
     for (let id of ids) {
         console.log(id);
         for (let idx in Object.keys(weekSum)) {
             if (idx == 7) {
                 break;
             }
-            let timestamp = Object.keys(weekSum)[idx];
-            let tomorrow_timestamp = Object.keys(weekSum)[parseInt(idx)+1];
-            console.log(`idx: ${idx} today: ${timestamp} tomorrow: ${tomorrow_timestamp}`);
+            
+            let timestamp = keys[idx];
+            let tomorrow_timestamp = keys[parseInt(idx)+1];
             weekSum[timestamp] += await sumRange(timestamp, tomorrow_timestamp, id)
         }
     }
     
     delete weekSum[Object.keys(weekSum)[7]];
-    // for (var i = 0; i<7; i++) {
-    //     console.log("start: " + (curDay.getTime()/1000));
-    //     console.log("end: " + (nextDay.getTime()/1000));
-    //     weekSum[curTS] = await sumRange(curTS, nextDay.getTime()/1000, id)
-    //     console.log(weekSum[curTS]);
-    //     curDay.setDate(curDay.getDate() + 1);
-    //     curTS = curDay.getTime()/1000;
-    //     nextDay.setDate(nextDay.getDate() + 1);
-    // }
-    console.log(weekSum);
     response.status(200).json(weekSum);
     response.end();
-
 };
 
 /*
