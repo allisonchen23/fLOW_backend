@@ -14,7 +14,7 @@ Sometimes it's nice to save the console.log in a file or just have the server ru
     * Sometimes when I use just `kill PID` in process that was using npm, the process still exists, so in this case use `kill -9 PID` (which is like ultimate decapitation)
 3. Run the command `npm start >~/log_file.log 2>err_file.err &`
     * If you would like the process to continue running even after you exit the VM, add `nohup` to the beginning of the command. This tells the terminal not to terminate the command upon logging out.
-    * `npm start` could also be `node index.js` but note that only running `node index.js` will *NOT* reflect your changes if you update your files while server is running. 
+    * `npm start` could also be `node index.js` but` node index.js` will NOT show updated changes. You will have to kill the process and rerun the command
     * `>~/log_file.log 2>err_file.err` means redirect the console.log to a file in the root directory called log_file.log and redirect standard error to a file in the root directory called err_file.err
     * The `&` means run this process in the background
 4. If you would still like to see the console.log in real time, run `tail -f -n +1 ~/log_file.log`

@@ -16,7 +16,6 @@ const getData = (request, response) => {
         }
         response.status(200).json(results.rows);
     });
-    console.log("Data ");
 }
 
 // Add Data
@@ -70,8 +69,6 @@ const getDailySum = async (request, response) => {
     }
 
     let lastDay = new Date(latestTime*1000 + 3000);
-    // console.log("last month: " + lastDay.getMonth() + " day: " + lastDay.getDate() + " year: " + lastDay.getFullYear());
-    // console.log(lastDay.getSeconds());
     
     //Set curDay to the start date
     let curDay = new Date(lastDay);
@@ -79,11 +76,6 @@ const getDailySum = async (request, response) => {
     curDay.setHours(0);
     curDay.setMinutes(0);
     curDay.setSeconds(0);
-    // console.log("cur month: " + curDay.getMonth() + " day: " + curDay.getDate() + " year: " + curDay.getFullYear());
-
-    // console.log(curDay.getDate()  + " lastDay's date: " + lastDay.getDate());
-    // console.log(curDay.getHours() + " " + curDay.getMinutes() + " " + curDay.getSeconds());
-    // curDay.setDate(latestTime.)
     
     var weekSum = {};
     var curTS = curDay.getTime()/1000;
@@ -99,7 +91,6 @@ const getDailySum = async (request, response) => {
     // Get the daily sums for each day of the week for each device 
     let keys = Object.keys(weekSum)
     for (let id of ids) {
-        console.log(id);
         for (let idx in Object.keys(weekSum)) {
             if (idx == 7) {
                 break;
@@ -124,7 +115,10 @@ const getDailySum = async (request, response) => {
 const sumRange = async (start_timestamp, end_timestamp, id) => {
     const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<($3)', [id, start_timestamp, end_timestamp]);
     let sum = query_result.rows[0].sum;
+    
     if (sum != null) {
+        sum = sum.toFixed(2);
+        console.log("rounded sum: " + sum);
         return sum;
     }
     else {
@@ -140,18 +134,17 @@ const sumRange = async (start_timestamp, end_timestamp, id) => {
 const sumVolume = (async (request, response) => {
     const id = parseInt(request.params.id);
     const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1)', [id]);
+    console.log(query_result.rows[0]);
     response.status(200).send(query_result.rows[0])
     response.end();
 });
 
 const getUserIds = (async (request, response) => {
     let query_result = await pool.query('SELECT DISTINCT device_id FROM data;');
-    console.log(query_result);
     let user_ids = [];
     for (let entry of query_result.rows) {
         user_ids.push(entry["device_id"]);
     }
-    console.log(user_ids);
     response.status(200).send(user_ids);
     response.end();
 })
