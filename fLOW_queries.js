@@ -16,7 +16,6 @@ const getData = (request, response) => {
         }
         response.status(200).json(results.rows);
     });
-    console.log("Data here ");
 }
 
 // Add Data
@@ -58,22 +57,54 @@ const getLastTimestamp = async (id) => {
 };
 
 const getDailySum = async (request, response) => {
-    /* Ray: get timestamps from last seven days */
-    console.log("start");
-    let id = parseInt(request.params.id);
-    let latestTime = await getLastTimestamp(id);
+    let ids = request.params.id.split("_");
+    let latestTime = 0;
 
-    console.log(latestTime);
-    console.log("run second");
+    // Out of all the devices we want to look at, obtain the latest timestamp
+    for (let id of ids) {
+        let time = await getLastTimestamp(id);
+        if (time > latestTime) {
+            latestTime = time;
+        }
+    }
 
+    let lastDay = new Date(latestTime*1000 + 3000);
     
-    response.end();
+    //Set curDay to the start date
+    let curDay = new Date(lastDay);
+    curDay.setDate(curDay.getDate() - 6);
+    curDay.setHours(0);
+    curDay.setMinutes(0);
+    curDay.setSeconds(0);
+    
+    var weekSum = {};
+    var curTS = curDay.getTime()/1000;
 
-    // const day = new Date();
-    //response.status(200).send(`Today: ${day}`);
-    //var sum = sumVolume(id, 200, 201);
-    // console.log(sum);
-    //response.status(200).json(sum);
+    // Initialize each day's sum to be 0
+    // We keep 8 elements for 7 day calculations so we have the ending timestamp on hand for the last day
+    for (let i = 0; i < 8; i++) {
+        weekSum[curTS] = 0;
+        curDay.setDate(curDay.getDate() + 1);
+        curTS = curDay.getTime()/1000;
+    }
+
+    // Get the daily sums for each day of the week for each device 
+    let keys = Object.keys(weekSum)
+    for (let id of ids) {
+        for (let idx in Object.keys(weekSum)) {
+            if (idx == 7) {
+                break;
+            }
+            
+            let timestamp = keys[idx];
+            let tomorrow_timestamp = keys[parseInt(idx)+1];
+            weekSum[timestamp] += await sumRange(timestamp, tomorrow_timestamp, id)
+        }
+    }
+    
+    delete weekSum[Object.keys(weekSum)[7]];
+    response.status(200).json(weekSum);
+    response.end();
 };
 
 /*
@@ -82,24 +113,46 @@ const getDailySum = async (request, response) => {
     Arguments: 
 */
 const sumRange = async (start_timestamp, end_timestamp, id) => {
-    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<=($3)', [id, start_timestamp, end_timestamp]);
-    return query_result.rows[0].sum;
+    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<($3)', [id, start_timestamp, end_timestamp]);
+    let sum = query_result.rows[0].sum;
+    
+    if (sum != null) {
+        sum = sum.toFixed(2);
+        console.log("rounded sum: " + sum);
+        return sum;
+    }
+    else {
+        return 0;
+    }
 };
 
+/**
+ * Sum volume over all dates for a specific device
+ * @param {} request 
+ * @param {*} response 
+ */
 const sumVolume = (async (request, response) => {
     const id = parseInt(request.params.id);
-    const start_timestamp = 200;
-    const end_timestamp = 201;
-    await sumRange(start_timestamp, end_timestamp, id).then((result) => {
-        response.status(200).send('' + result);
-    });
+    const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1)', [id]);
+    console.log(query_result.rows[0]);
+    response.status(200).send(query_result.rows[0])
     response.end();
 });
 
+const getUserIds = (async (request, response) => {
+    let query_result = await pool.query('SELECT DISTINCT device_id FROM data;');
+    let user_ids = [];
+    for (let entry of query_result.rows) {
+        user_ids.push(entry["device_id"]);
+    }
+    response.status(200).send(user_ids);
+    response.end();
+})
 module.exports = {
     getData,
     addEntry,
     getDeviceData,
     getDailySum,
     sumVolume,
+    getUserIds
 }
