@@ -8,7 +8,7 @@ const pool = new Pool ({
     database: 'db1',
 });
 
-// Get Data
+// Gets all data entries in the table
 const getData = (request, response) => {
     pool.query('SELECT * FROM data ORDER BY timestamp', (error, results) => {
         if (error) {
@@ -18,7 +18,7 @@ const getData = (request, response) => {
     });
 }
 
-// Add Data
+// Add Data to the table
 const addEntry = (request, response) => {
     const id = parseInt(request.params.id);
     const timestamp = parseInt(request.params.timestamp)
@@ -36,7 +36,7 @@ const addEntry = (request, response) => {
         })
 }
 
-// Get all data for a device
+// Get all data for a specific device ID
 const getDeviceData = (request, response) => {
     const id = parseInt(request.params.id);
     pool.query('SELECT * FROM data WHERE device_id=($1)', [id],
@@ -50,12 +50,14 @@ const getDeviceData = (request, response) => {
     )
 }
 
-/* Unable to work due to async runtime? */
+
+// Helper function to obtain the timestamp of the last entry for a specific device ID
 const getLastTimestamp = async (id) => {
     const max = await pool.query('SELECT MAX("timestamp") FROM data WHERE device_id=($1)', [id]);
     return max.rows[0].max;
 };
 
+// Return the daily sums for the last week of the specified devices selected
 const getDailySum = async (request, response) => {
     let ids = request.params.id.split("_");
     let latestTime = 0;
@@ -110,7 +112,6 @@ const getDailySum = async (request, response) => {
 /*
     Helper function to sum data between start_timestamp and
     end_timestamp with ID id
-    Arguments: 
 */
 const sumRange = async (start_timestamp, end_timestamp, id) => {
     const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1) AND timestamp>=($2) AND timestamp<($3)', [id, start_timestamp, end_timestamp]);
@@ -126,11 +127,7 @@ const sumRange = async (start_timestamp, end_timestamp, id) => {
     }
 };
 
-/**
- * Sum volume over all dates for a specific device
- * @param {} request 
- * @param {*} response 
- */
+// Function to return sum of volume over all dates for a specific device
 const sumVolume = (async (request, response) => {
     const id = parseInt(request.params.id);
     const query_result = await pool.query('SELECT SUM (volume) FROM data WHERE device_id=($1)', [id]);
@@ -139,6 +136,7 @@ const sumVolume = (async (request, response) => {
     response.end();
 });
 
+// Return list of unique device IDs from the table
 const getUserIds = (async (request, response) => {
     let query_result = await pool.query('SELECT DISTINCT device_id FROM data;');
     let user_ids = [];
